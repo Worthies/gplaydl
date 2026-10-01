@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import secrets
 import time
 from pathlib import Path
 from typing import Optional
@@ -57,13 +58,32 @@ def load_link() -> dict:
 
 def save_link(dispenser: str, api_key: str) -> Path:
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-    _LINK_PATH.write_text(json.dumps(
-        {"dispenser": normalize_dispenser(dispenser), "api_key": api_key},
-        indent=2,
-    ))
+    data = load_link()
+    data["dispenser"] = normalize_dispenser(dispenser)
+    data["api_key"] = api_key
+    _LINK_PATH.write_text(json.dumps(data, indent=2))
     # The key lets anyone download as this device, so keep it to the owner.
     os.chmod(_LINK_PATH, 0o600)
     return _LINK_PATH
+
+
+def device_secret() -> str:
+    """This machine's enrolment identity, creating it on first use.
+
+    A high-entropy value generated once and kept on disk. It doubles as the
+    recovery credential: presenting it again at /devices/enroll re-issues the
+    same identity instead of orphaning accounts already synced under it.
+    """
+    data = load_link()
+    existing = data.get("device_secret")
+    if existing:
+        return existing
+    secret = secrets.token_hex(32)
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    data["device_secret"] = secret
+    _LINK_PATH.write_text(json.dumps(data, indent=2))
+    os.chmod(_LINK_PATH, 0o600)
+    return secret
 
 
 def dispenser_base(dispenser_url: Optional[str] = None) -> str:

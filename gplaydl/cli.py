@@ -72,10 +72,14 @@ def main(
 @app.command()
 def link(
     dispenser: Optional[str] = typer.Option(None, "--dispenser", "-d", help="Dispenser to link with."),
-    code: Optional[str] = typer.Option(None, "--code", help="Pairing code from the Authenticator app."),
+    oauth_token: Optional[str] = typer.Option(
+        None, "--oauth-token",
+        help="oauth_token cookie value (or the whole Cookie header) from a Google sign-in.",
+    ),
+    email: Optional[str] = typer.Option(None, "--email", "-e", help="The Google account email you signed in as."),
 ) -> None:
-    """Link this machine to the dispenser with a pairing code."""
-    run_link(console, dispenser_base(dispenser), code)
+    """Add a Google account to gplaydl, straight from this machine."""
+    run_link(console, dispenser_base(dispenser), oauth_token, email=email)
 
 
 # ── auth ────────────────────────────────────────────────────────────────────

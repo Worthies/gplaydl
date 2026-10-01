@@ -2,7 +2,7 @@
 
 Download APKs from Google Play right from your terminal. One command gets you the base APK, split APKs (App Bundles), OBB expansion files and Play Asset Delivery packs.
 
-gplaydl downloads through a Google account you add yourself in the Authenticator app. Your account stays private to you, and setup takes about two minutes.
+gplaydl downloads through a Google account you add yourself, straight from this machine. Your account stays private to you, and setup takes about two minutes.
 
 Prefer a browser? Use [gplaydl web](https://gplaydl.com), or view its
 [source code](https://github.com/rehmatworks/gplaydl-web).
@@ -45,11 +45,11 @@ pip install .
 
 ## First-time setup
 
-You will need any Android phone for a couple of minutes, and a spare Google account to add.
+You will need a spare Google account to add and about two minutes, all from this machine; no phone required.
 
-1. Install the [gplaydl Authenticator](https://dispenser.gplaydl.com) app ([source](https://github.com/rehmatworks/gplaydl-authenticator)) on the phone. It is not on Google Play, so Android will ask you to allow the install.
-2. Sign in with a spare Google account. Prefer a throwaway over your main one: Google sometimes restricts accounts it sees on unofficial clients. The account stays private to you and is never shared with anyone.
-3. Open **Link gplaydl** in the app, then run this on your computer and type in the code it shows:
+1. In a browser, sign in with a spare Google account at [accounts.google.com/EmbeddedSetup](https://accounts.google.com/EmbeddedSetup). Prefer a throwaway over your main one: Google sometimes restricts accounts it sees on unofficial clients. The account stays private to you and is never shared with anyone.
+2. Open dev tools (F12) → Application/Storage → Cookies, and copy the `oauth_token` cookie's value for `accounts.google.com`.
+3. Run this and paste it in, along with the email you signed in as:
 
 ```bash
 gplaydl link
@@ -61,12 +61,12 @@ Done. Every download now goes through your own account:
 gplaydl download com.whatsapp
 ```
 
-Your Google password and 2FA codes never leave the phone; the app uploads only the resulting Play token. You can remove an account in the app whenever you like, and if you skip `gplaydl link`, the first command that needs it will walk you through the same steps.
+`oauth_token` is single-use and short-lived: gplaydl trades it immediately for a long-lived AAS token and never stores the cookie itself. You can remove an account from the dispenser whenever you like, and if you skip `gplaydl link`, the first command that needs it will walk you through the same steps.
 
 ## Quick start
 
 ```bash
-gplaydl link                    # once, with the code from the app
+gplaydl link                    # once, paste the oauth_token cookie
 gplaydl download com.whatsapp   # base APK + splits + OBB/asset packs
 ```
 
@@ -76,17 +76,19 @@ Every command takes `-d/--dispenser` to pick a dispenser and `--arch` for the de
 
 ### `link`
 
-Pairs this machine with the dispenser. Run it once, or again to re-link.
+Adds a Google account, straight from this machine. Run it again any time to add another.
 
 ```bash
-gplaydl link                              # asks for the code interactively
-gplaydl link --code ABCD-EFGH             # or pass it directly
-gplaydl link -d https://your.dispenser    # link to a self-hosted dispenser
+gplaydl link                                        # asks for the cookie and email interactively
+gplaydl link --oauth-token "..." --email you@gmail.com  # or pass both directly (e.g. in scripts)
+gplaydl link -d https://your.dispenser               # link to a self-hosted dispenser
 ```
 
-The key lands in `~/.config/gplaydl/config.json`. For containers and CI, set `GPLAYDL_API_KEY` instead of linking interactively.
+This machine's own identity (a device secret, generated once) and the dispenser API key it is
+issued both land in `~/.config/gplaydl/config.json`. For containers and CI, set `GPLAYDL_API_KEY`
+instead of linking interactively.
 
-If you added more than one account in the app, pass `--email you@gmail.com` on `auth` or `download` to use a specific one. Without it, gplaydl rotates through the accounts you added.
+If you added more than one account, pass `--email you@gmail.com` on `auth` or `download` to use a specific one. Without it, gplaydl rotates through the accounts you added.
 
 ### `auth`
 
@@ -192,8 +194,7 @@ A word of caution before adding an account you care about: Google can rate-limit
 The dispenser is open source and runs anywhere Go and Postgres do. Host your own for a team or just for yourself:
 
 1. Follow the [dispenser deployment guide](https://github.com/rehmatworks/gplaydl-dispenser).
-2. In the Authenticator app, point **Settings → Server** at your instance and add accounts.
-3. Link gplaydl against it: `gplaydl link -d https://your.dispenser`
+2. Link gplaydl against it: `gplaydl link -d https://your.dispenser`
 
 ## Architecture support
 
@@ -218,12 +219,11 @@ for apps that publish one APK per ABI) land next to each other.
 
 ## Upgrading from 3.x
 
-gplaydl 4 drops the shared community pool: downloads now go through a Google account you add yourself, kept private to you. Add an account in the Authenticator app and run `gplaydl link` once after upgrading. (Older 2.x releases borrowed anonymous tokens from Aurora Store; that path is gone.)
+gplaydl 4 drops the shared community pool: downloads now go through a Google account you add yourself, kept private to you. Run `gplaydl link` once after upgrading to add one. (Older 2.x releases borrowed anonymous tokens from Aurora Store; that path is gone.)
 
 ## Related projects
 
 - [gplaydl web](https://gplaydl.com) ([source](https://github.com/rehmatworks/gplaydl-web)) for downloading from a browser
-- [gplaydl Authenticator](https://dispenser.gplaydl.com) ([source](https://github.com/rehmatworks/gplaydl-authenticator)) for adding your Google account
 - [gplaydl dispenser](https://dispenser.gplaydl.com) ([source](https://github.com/rehmatworks/gplaydl-dispenser)) for private account and token management
 - [Rovelix](https://rovelix.app) (sponsored) for turning your Google Play portfolio into auto-synced websites, app-ads.txt and review insights
 
